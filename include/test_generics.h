@@ -5,6 +5,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <assert.h>
 
@@ -48,7 +49,10 @@ TypeName ChangeStringToEnum( const char* tmp );
 typedef struct ValueWindowSquential
 {
     char* type;
+
     void* data;
+
+    bool is_floating_point;
 
     uint16_t type_size;
 

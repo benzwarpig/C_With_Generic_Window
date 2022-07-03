@@ -74,7 +74,8 @@ void InitValueWindow( ValueWindowSquential* tmp, const char* type, uint32_t max_
             tmp->data = ( uint8_t* ) malloc( max_size * sizeof( uint8_t ) );
             memset( tmp->data, 0, tmp->max_size );
 
-            tmp->type_size = sizeof( uint8_t );
+            tmp->type_size         = sizeof( uint8_t );
+            tmp->is_floating_point = false;
         }
         break;
 
@@ -82,7 +83,8 @@ void InitValueWindow( ValueWindowSquential* tmp, const char* type, uint32_t max_
             tmp->data = ( int* ) malloc( max_size * sizeof( int ) );
             memset( tmp->data, 0, tmp->max_size );
 
-            tmp->type_size = sizeof( int );
+            tmp->type_size         = sizeof( int );
+            tmp->is_floating_point = false;
         }
         break;
 
@@ -90,7 +92,8 @@ void InitValueWindow( ValueWindowSquential* tmp, const char* type, uint32_t max_
             tmp->data = ( float* ) malloc( max_size * sizeof( float ) );
             memset( tmp->data, 0, tmp->max_size );
 
-            tmp->type_size = sizeof( float );
+            tmp->type_size         = sizeof( float );
+            tmp->is_floating_point = true;
         }
         break;
 
@@ -98,7 +101,8 @@ void InitValueWindow( ValueWindowSquential* tmp, const char* type, uint32_t max_
             tmp->data = ( double* ) malloc( max_size * sizeof( double ) );
             memset( tmp->data, 0, tmp->max_size );
 
-            tmp->type_size = sizeof( double );
+            tmp->type_size         = sizeof( double );
+            tmp->is_floating_point = true;
         }
         break;
 
@@ -225,11 +229,12 @@ int main( void )
     ValueWindowSquential tmp;
     InitValueWindow( &tmp, kValueTypeList[ FLOAT ], 10 );
 
-    float insert_data = 0;
+    float insert_data = 5.5;
     for ( int i = 0; i < tmp.max_size; i++ )
     {
         // 2. 插入数据到窗口中，直到接收到窗口满反馈
-        insert_data = ( tmp.max_size - i ) * 1.1;
+        insert_data -= 1; // ( tmp.max_size - i )
+
         if ( kWindowAlreadyFull == ValueWindowFixedInsert( &tmp, &insert_data ) )
         {
             // 3. 打印排序前窗口
@@ -237,7 +242,7 @@ int main( void )
             ShowTheWindow( &tmp );
 
             // 4. 通过直接插入排序法对窗口进行排序
-            ValueWindowInsertSort( &tmp );
+            ValueWindowSelectSort( &tmp );
 
             // 5. 打印排序后的窗口
             printf( "end sort \r\n" );

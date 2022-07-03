@@ -17,7 +17,7 @@ static inline void* GetMemberAddress( ValueWindowSquential* tmp, int i )
     return ( void* ) ( tmp->data + i * tmp->type_size );
 }
 
-// 打印任意类型数据的十六进制编码 调试用
+// 工具函数 打印任意类型数据的十六进制编码 调试用 不对外暴露
 static inline void ShowTypeChangeToHex( ValueWindowSquential* tmp, int i )
 {
     uint8_t* res = ( uint8_t* ) GetMemberAddress( tmp, i );
@@ -25,6 +25,15 @@ static inline void ShowTypeChangeToHex( ValueWindowSquential* tmp, int i )
     {
         printf( "Hex : 0x%x \r\n", *res++ );
     }
+}
+
+// 工具函数 获取任意值的正负 不对外暴露
+// return  true  负数
+//         false 正数（包括0）
+static inline bool GetValuePositive( ValueWindowSquential* tmp, int i )
+{
+    uint8_t res = *( ( uint8_t* ) GetMemberAddress( tmp, i ) + tmp->type_size - 1 );
+    return res & ( 1 << 7 );
 }
 
 // 1. 设置任意成员的值
@@ -50,17 +59,48 @@ static inline int ComparMemberValue( ValueWindowSquential* tmp, int i, int j )
 {
     int res = 0;
 
+    bool i_position = GetValuePositive( tmp, i );
+    bool j_position = GetValuePositive( tmp, j );
+
     uint8_t* value_i = ( uint8_t* ) GetMemberAddress( tmp, i );
     uint8_t* value_j = ( uint8_t* ) GetMemberAddress( tmp, j );
 
-    for ( int k = tmp->type_size - 1; k >= 0; k-- )
+    do
     {
-        res = memcmp( value_i + k, value_j + k, sizeof( uint8_t ) );
-        if ( res != 0 )
+        if ( i_position != j_position )
         {
+            res = ( i_position == false ) ? 1 : -1;
             break;
         }
+
+        for ( int k = tmp->type_size - 1; k >= 0; k-- )
+        {
+            if ( *( value_i + k ) > *( value_j + k ) )
+            {
+                res = -1;
+                break;
+            }
+            else if ( *( value_i + k ) == *( value_j + k ) )
+            {
+                res = 0;
+            }
+            else
+            {
+                res = 1;
+                break;
+            }
+        }
+    } while ( 0 );
+
+    if ( !i_position && !j_position )
+    {
+        res = -res;
     }
+    else if ( i_position && j_position && !tmp->is_floating_point )
+    {
+        res = -res;
+    }
+
     return res;
 }
 
@@ -69,12 +109,12 @@ static inline int ComparMemberValueFree( ValueWindowSquential* tmp, int i, void*
 {
     int res = 0;
 
-    uint8_t* value_i = ( uint8_t* ) GetMemberAddress( tmp, i );
-    uint8_t* value_j = ( uint8_t* ) j;
+    char* value_i = ( char* ) GetMemberAddress( tmp, i );
+    char* value_j = ( char* ) j;
 
     for ( int k = tmp->type_size - 1; k >= 0; k-- )
     {
-        res = memcmp( value_i + k, value_j + k, sizeof( uint8_t ) );
+        res = memcmp( value_i + k, value_j + k, sizeof( char ) );
         if ( res != 0 )
         {
             break;
